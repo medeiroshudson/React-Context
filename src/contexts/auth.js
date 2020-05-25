@@ -1,19 +1,32 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import ContextDevTool from 'react-context-devtool';
+import decode from 'jwt-decode';
 import api from '../services/api';
+
+import Loading from '../pages/Loading';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [token, setToken] = useState('');
+  const [expiredToken, setExpiredToken] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStorage() {
-      const storagedUser = localStorage.getItem('user');
       const storagedToken = localStorage.getItem('token');
 
-      if (storagedUser && storagedToken) {
-        setUser(JSON.parse(storagedUser));
+      if (storagedToken) {
+        const decodedToken = decode(storagedToken);
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // if token expiry date is lower than actual date
+        if (decodedToken.exp <= Math.floor(new Date() / 1000)) setExpiredToken(true);
+
+        setAuthenticated(true);
+        setToken(decodedToken);
         api.defaults.headers['Authorization'] = `Bearer ${storagedToken}`;
       }
 
@@ -24,25 +37,38 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function Login(username, password) {
-    api
-      .get(`login?usuario=${username}&senha=${password}`)
-      .then((response) => setUser(response.data.user))
-      .then((response) => (api.defaults.headers.Authorization = `Bearer ${JSON.parse(response.data.token)}`))
-      .then((response) => localStorage.setItem('user', JSON.stringify(response.data.user)))
-      .then((response) => localStorage.setItem('token', response.data.token))
-      .catch((error) => (error.status = 400 ? alert('server unreachable') : alert(error.data)));
+    const { data } = await api.get(`login?usuario=${username}&senha=${password}`);
+    const decodedToken = decode(data.token);
+
+    setAuthenticated(true);
+    setToken(decodedToken);
+    api.defaults.headers['Authorization'] = `Bearer ${data.token}`;
+    localStorage.setItem('token', data.token);
+  }
+
+  async function refreshToken() {
+    console.log('token refreshed');
   }
 
   async function Logout() {
     localStorage.clear();
-    setUser(null);
+    setAuthenticated(false);
+    setToken('');
   }
 
-  if (loading) {
-    return <h1>Loading data...</h1>;
+  while (loading) return <Loading />;
+
+  if (expiredToken) {
+    refreshToken();
+    setExpiredToken(false);
   }
 
-  return <AuthContext.Provider value={{ authenticated: !!user, user, Login, Logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ authenticated, token, expiredToken, Login, Logout }}>
+      <ContextDevTool context={AuthContext} id="auth" displayName="Authentication Context" />
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
