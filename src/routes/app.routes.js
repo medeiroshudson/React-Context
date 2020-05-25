@@ -1,15 +1,13 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Employees from "./pages/Employees";
-import EmployeeInfo from "./pages/Employees/info";
+import Dashboard from "../pages/Dashboard";
+import Employees from "../pages/Employees";
+import EmployeeInfo from "../pages/Employees/info";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
       <Route path="" element={<Dashboard />} />
 
       <Route path="/employees" element={<Employees />}>
