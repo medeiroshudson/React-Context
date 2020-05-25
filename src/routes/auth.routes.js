@@ -1,7 +1,7 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-import Login from "../pages/Login";
+import Login from '../pages/Login';
 
 export default function AuthRoutes() {
   return (

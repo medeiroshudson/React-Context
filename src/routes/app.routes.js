@@ -1,9 +1,9 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-import Dashboard from "../pages/Dashboard";
-import Employees from "../pages/Employees";
-import EmployeeInfo from "../pages/Employees/info";
+import Dashboard from '../pages/Dashboard';
+import Employees from '../pages/Employees';
+import EmployeeInfo from '../pages/Employees/info';
 
 export default function AppRoutes() {
   return (

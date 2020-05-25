@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+import React from 'react';
+import { useNavigate, Outlet } from 'react-router-dom';
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -8,7 +8,7 @@ export default function Employees() {
     <>
       <h1>Employees page</h1>
       <Outlet />
-      <button onClick={() => navigate("/")}>Go to Dashboard</button>
+      <button onClick={() => navigate('/')}>Go to Dashboard</button>
     </>
   );
 }
