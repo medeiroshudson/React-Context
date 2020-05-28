@@ -3,14 +3,13 @@ import ContextDevTool from 'react-context-devtool';
 import decode from 'jwt-decode';
 import api from '../services/api';
 
-import Loading from '../pages/Loading';
+import Loading from '../pages/loading';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [authenticated, setAuthenticated] = useState(false);
-  const [token, setToken] = useState('');
-  const [expiredToken, setExpiredToken] = useState(false);
+  const [user, setUser] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,15 +17,10 @@ export function AuthProvider({ children }) {
       const storagedToken = localStorage.getItem('token');
 
       if (storagedToken) {
-        const decodedToken = decode(storagedToken);
-
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // if token expiry date is lower than actual date
-        if (decodedToken.exp <= Math.floor(new Date() / 1000)) setExpiredToken(true);
+        const { unique_name: user, given_name: name, role } = decode(storagedToken);
 
         setAuthenticated(true);
-        setToken(decodedToken);
+        setUser({ user, name, role });
         api.defaults.headers['Authorization'] = `Bearer ${storagedToken}`;
       }
 
@@ -38,33 +32,24 @@ export function AuthProvider({ children }) {
 
   async function Login(username, password) {
     const { data } = await api.get(`login?usuario=${username}&senha=${password}`);
-    const decodedToken = decode(data.token);
+    const { unique_name: user, given_name: name, role } = decode(data.token);
 
     setAuthenticated(true);
-    setToken(decodedToken);
+    setUser({ user, name, role });
     api.defaults.headers['Authorization'] = `Bearer ${data.token}`;
     localStorage.setItem('token', data.token);
-  }
-
-  async function refreshToken() {
-    console.log('token refreshed');
   }
 
   async function Logout() {
     localStorage.clear();
     setAuthenticated(false);
-    setToken('');
+    setUser({});
   }
 
   while (loading) return <Loading />;
 
-  if (expiredToken) {
-    refreshToken();
-    setExpiredToken(false);
-  }
-
   return (
-    <AuthContext.Provider value={{ authenticated, token, expiredToken, Login, Logout }}>
+    <AuthContext.Provider value={{ authenticated, user, Login, Logout }}>
       <ContextDevTool context={AuthContext} id="auth" displayName="Authentication Context" />
       {children}
     </AuthContext.Provider>
